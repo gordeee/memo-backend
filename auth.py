@@ -27,11 +27,11 @@ async def login(request: Request):
         scope="openid email profile"
     )
 
+from fastapi.responses import HTMLResponse
+
 @router.get("/auth/callback")
 async def auth_callback(request: Request):
     token = await oauth.google.authorize_access_token(request)
-
-    # Prefer userinfo for simplicity and reliability
     resp = await oauth.google.get("https://www.googleapis.com/oauth2/v3/userinfo", token=token)
     user_info = resp.json()
 
@@ -41,4 +41,15 @@ async def auth_callback(request: Request):
         'name': user_info['name']
     }
 
-    return RedirectResponse(url="/")
+    # ✅ Return a simple HTML success message
+    html = f"""
+    <html>
+      <head><title>Logged In</title></head>
+      <body>
+        <h1>✅ Login successful</h1>
+        <p>Signed in as <strong>{user_info['email']}</strong></p>
+        <p>You can now use the API.</p>
+      </body>
+    </html>
+    """
+    return HTMLResponse(content=html)
