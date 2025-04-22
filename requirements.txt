@@ -8,3 +8,5 @@ python-jose
 mysql-connector-python
 aiofiles
 python-dotenv
+itsdangerous
+itsdangerous
