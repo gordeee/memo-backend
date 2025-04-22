@@ -15,20 +15,17 @@ oauth = OAuth(config)
 oauth.register(
     name='google',
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-    client_kwargs={
-        'scope': 'openid email profile'
-    }
+    client_kwargs={}
 )
 
 @router.get("/login")
 async def login(request: Request):
     redirect_uri = request.url_for('auth_callback')
-    return await oauth.google.authorize_redirect(request, redirect_uri)
+    return await oauth.google.authorize_redirect(request, redirect_uri, scope="openid email profile")
 
 @router.get("/auth/callback")
 async def auth_callback(request: Request):
     token = await oauth.google.authorize_access_token(request)
-    # This line will now work because we're explicitly requesting ID token
     user_info = await oauth.google.parse_id_token(request, token)
     request.session['user'] = {
         'id': user_info['sub'],
