@@ -21,15 +21,24 @@ oauth.register(
 @router.get("/login")
 async def login(request: Request):
     redirect_uri = request.url_for('auth_callback')
-    return await oauth.google.authorize_redirect(request, redirect_uri, scope="openid email profile")
+    return await oauth.google.authorize_redirect(
+        request,
+        redirect_uri,
+        scope="openid email profile"
+    )
 
 @router.get("/auth/callback")
 async def auth_callback(request: Request):
     token = await oauth.google.authorize_access_token(request)
-    user_info = await oauth.google.parse_id_token(request, token)
+
+    # Prefer userinfo for simplicity and reliability
+    resp = await oauth.google.get("https://www.googleapis.com/oauth2/v3/userinfo", token=token)
+    user_info = resp.json()
+
     request.session['user'] = {
         'id': user_info['sub'],
         'email': user_info['email'],
         'name': user_info['name']
     }
+
     return RedirectResponse(url="/")
